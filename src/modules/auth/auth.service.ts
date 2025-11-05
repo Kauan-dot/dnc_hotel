@@ -8,6 +8,7 @@ import { UserService } from "../users/user.services";
 import { CreateUserDTO } from "../users/domain/dto/createUser.dto";
 import { AuthRegisterDTO } from "./domain/dto/authRegister.dto";
 import { Role } from "@prisma/client";
+import { AuthResetPasswordDTO } from "./domain/dto/authResetPassword.dto";
 
 
 
@@ -62,4 +63,14 @@ export class AuthService {
         return this.generateJwtToken(user);
     }
 
+
+    async resetPassword({token, password}: AuthResetPasswordDTO) {
+        const {valid, decoded } = await this.jwtService.verifyAsync(token);
+
+        if (!valid) throw new UnauthorizedException('Invalid token');
+
+        const user = await this.userService.update(decoded.sub, {password});
+        
+        return await this.generateJwtToken(user);
+    }
 }
