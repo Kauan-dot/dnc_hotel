@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import { User } from "generated/prisma";
 import { AuthLoginDto } from "./domain/dto/authLogin.dto";
 import { PrismaService } from "../prisma/prisma.service";
@@ -9,6 +9,7 @@ import { CreateUserDTO } from "../users/domain/dto/createUser.dto";
 import { AuthRegisterDTO } from "./domain/dto/authRegister.dto";
 import { Role } from "@prisma/client";
 import { AuthResetPasswordDTO } from "./domain/dto/authResetPassword.dto";
+import { ValidateTokenDTO } from "./domain/dto/validateToken.dto";
 
 
 
@@ -20,27 +21,22 @@ export class AuthService {
         private readonly prisma: PrismaService,
     ) {}
 
-    async generateJwtToken(user: User) {
+    async generateJwtToken(user: User, expiresIn: string = '1d') {
         const payload = { sub: user.id, name: user.name };
-        const options = { 
-            expiresIn: 60 * 60 * 24,
+        const options: JwtSignOptions = { 
+            expiresIn,
             issuer: 'dnc_hotel',
-            audience: "users"
+            audience: 'users',
         };
 
-        return {access_token: await this.jwtService.sign(payload, options)};
+        return {access_token: this.jwtService.sign(payload, options)};
     }
 
     async login({ email, password }: AuthLoginDto) {
-        const user = await this.prisma.user.findUnique({ where: { email } });
+        const user =  await this.userService.findByEmail(email);
 
-        if (!user || !user.password) {
-            throw new UnauthorizedException('Email ou senha incorretos');
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) {
-            throw new UnauthorizedException('Email ou senha incorretos');
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            throw new UnauthorizedException('Email or password incorrect');
         }
 
         return this.generateJwtToken(user);
@@ -64,13 +60,40 @@ export class AuthService {
     }
 
 
-    async resetPassword({token, password}: AuthResetPasswordDTO) {
-        const {valid, decoded } = await this.jwtService.verifyAsync(token);
+    async reset({token, password}: AuthResetPasswordDTO) {
+        const {valid, decoded } = await this.validateToken(token);
 
-        if (!valid) throw new UnauthorizedException('Invalid token');
+        if (!valid || !decoded) throw new UnauthorizedException('Invalid token');
 
-        const user = await this.userService.update(decoded.sub, {password});
+        const user = await this.userService.update(Number(decoded.sub), {password});
         
         return await this.generateJwtToken(user);
     }
+
+    async forgot(email: string) {
+        const user = await this.userService.findByEmail(email);
+
+        if (!user) {
+            throw new UnauthorizedException('Email is incorrect');
+        }
+
+        const token = this.generateJwtToken(user, '30m');
+
+        return token;
+    }
+
+    private async validateToken(token: string): Promise<ValidateTokenDTO> {
+        try {
+            const decoded = await this.jwtService.verifyAsync(token, {
+                secret: process.env.JWT_SECRET,
+                issuer: 'dnc_hotel',
+                audience: 'users',
+            });
+
+            return { valid: true, decoded}
+        } catch (error) {
+            return { valid: false, message: error.message };
+        }
+    }
+
 }
