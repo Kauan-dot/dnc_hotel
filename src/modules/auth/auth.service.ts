@@ -4,7 +4,7 @@ import { User } from "generated/prisma";
 import { AuthLoginDto } from "./domain/dto/authLogin.dto";
 import { PrismaService } from "../prisma/prisma.service";
 import * as bcrypt from "bcrypt";
-import { UserService } from "../users/user.services";
+import { UserService } from "../users/user.service";
 import { CreateUserDTO } from "../users/domain/dto/createUser.dto";
 import { AuthRegisterDTO } from "./domain/dto/authRegister.dto";
 import { Role } from "@prisma/client";
@@ -82,7 +82,7 @@ export class AuthService {
         return token;
     }
 
-    private async validateToken(token: string): Promise<ValidateTokenDTO> {
+    async validateToken(token: string): Promise<ValidateTokenDTO> {
         try {
             const decoded = await this.jwtService.verifyAsync(token, {
                 secret: process.env.JWT_SECRET,
