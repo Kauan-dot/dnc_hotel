@@ -6,6 +6,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { DEFAULT_CIPHERS } from 'tls';
 import { from } from 'rxjs';
+import { HotelsModule } from './modules/hotels/hotels.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { from } from 'rxjs';
       defaults: {
         from: `"dnc_hotel" <${process.env.EMAIL_USER}>`,
       }
-    })
+    }),
+    HotelsModule
   ],
   providers: [
     {
