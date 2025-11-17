@@ -7,6 +7,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { DEFAULT_CIPHERS } from 'tls';
 import { from } from 'rxjs';
 import { HotelsModule } from './modules/hotels/hotels.module';
+import { ReservationsModule } from './modules/reservations/reservations.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { HotelsModule } from './modules/hotels/hotels.module';
         from: `"dnc_hotel" <${process.env.EMAIL_USER}>`,
       }
     }),
-    HotelsModule
+    HotelsModule,
+    ReservationsModule
   ],
   providers: [
     {

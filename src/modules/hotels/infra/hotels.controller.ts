@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Query, UseGuards, Param, UploadedFile, ParseFilePipe, FileTypeValidator, MaxFileSizeValidator, UseInterceptors } from '@nestjs/common';
 import { CreateHotelDto } from '../domain/dto/create-hotel.dto';
 import { UpdateHotelDto } from '../domain/dto/update-hotel.dto';
 import { CreateHotelsService } from '../services/createHotel.service';
@@ -15,6 +15,10 @@ import { Role } from '@prisma/client';
 import { OwnerHotelGuard } from 'src/shared/guards/ownerHotel.guard';
 import { ParamId } from 'src/shared/decorators/paramId.decorator';
 import { User } from 'src/shared/decorators/user.decorator';
+import { uploadImageHotelService } from '../services/uploadImageHotel.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileValidationInterceptor } from 'src/shared/interceptos/fileValidation.interceptor';
+import { ImageFileValidator } from 'src/shared/validators/image-file.validator';
 
 @UseGuards(AuthGuard, RoleGuard)
 @Controller('hotels')
@@ -27,6 +31,7 @@ export class HotelsController {
     private readonly updateHotelService: UpdateHotelsService,
     private readonly findByNameHotelService: FindByNameHotelsService,
     private readonly findByOwnerHotelService: FindByOwnerHotelsService,
+    private readonly uploadImageHotelService: uploadImageHotelService,
   ) {}
 
   @Roles(Role.ADMIN)
@@ -57,6 +62,22 @@ export class HotelsController {
   @Get(':id')
   findOne(@ParamId() id: number) {
     return this.findOneHotelService.execute(id);
+  }
+
+  @UseInterceptors(FileInterceptor('image'), FileValidationInterceptor)
+  @Patch('image/:hotelId')
+  uploadImage(
+    @Param('hotelId') id: string, 
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new ImageFileValidator(),
+          new MaxFileSizeValidator({maxSize: 900 * 1024}),
+        ]
+      })
+    ) image: Express.Multer.File
+  ) {
+    return this.uploadImageHotelService.execute(id, image.filename);
   }
 
   @UseGuards(OwnerHotelGuard)
