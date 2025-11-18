@@ -6,21 +6,29 @@ import { User } from 'src/shared/decorators/user.decorator';
 import { FindAllReservationsService } from '../services/findAllReservations.service';
 import { ParamId } from 'src/shared/decorators/paramId.decorator';
 import { FindByIdReservationsService } from '../services/findByIdReservations.service';
+import { ReservationStatus, Role } from '@prisma/client';
+import { UpdateStatusReservationsService } from '../services/updateStatusReservations.service';
+import { RoleGuard } from 'src/shared/guards/role.guard';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { FindByUserReservationsService } from '../services/findByUserReservations.service';
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RoleGuard)
 @Controller('reservations')
 export class ReservationsController {
   constructor(
     private readonly createReservationsService: CreateReservationsService,
     private readonly findAllReservationsService: FindAllReservationsService,
     private readonly findByIdReservationsService: FindByIdReservationsService,
+    private readonly updateStatusReservationsService: UpdateStatusReservationsService,
+    private readonly findByUserReservationsService: FindByUserReservationsService,
   ) {}
 
+  @Roles(Role.USER)
   @Post()
   create(@User('id') id: number, @Body() body: CreateReservationDto) {
     return this.createReservationsService.create(id, body);
   }
-
+  
   @Get()
   findAll() {
     return this.findAllReservationsService.execute();
@@ -28,7 +36,7 @@ export class ReservationsController {
 
   @Get('user')
   findByUser(@User('id') id: number) {
-    return this.findByIdReservationsService.execute(id);
+    return this.findByUserReservationsService.execute(id);
   }
 
   @Get(':id')
@@ -36,10 +44,14 @@ export class ReservationsController {
     return this.findByIdReservationsService.execute(id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
-  //   return this.reservationsService.update(+id, updateReservationDto);
-  // }
+  @Roles(Role.ADMIN)
+  @Patch(':id')
+  updateStatus(
+    @ParamId() id: number, 
+    @Body('status') status: ReservationStatus,
+  ) {
+    return this.updateStatusReservationsService.execute(id, status);
+  }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {
