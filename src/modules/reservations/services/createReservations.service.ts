@@ -6,6 +6,8 @@ import { differenceInDays, parseISO } from 'date-fns'
 import type { IHotelRepository } from 'src/modules/hotels/domain/repositories/Ihotel.repositorie';
 import { Reservation, ReservationStatus } from '@prisma/client';
 import { HOTEL_REPOSITORY_TOKEN } from 'src/modules/hotels/utils/repositoriesTokens';
+import { MailerService } from '@nestjs-modules/mailer';
+import { UserService } from 'src/modules/users/user.service';
 
 @Injectable()
 export class CreateReservationsService {
@@ -14,6 +16,8 @@ export class CreateReservationsService {
     private readonly reservatioRepository: IReservationRepository,
     @Inject(HOTEL_REPOSITORY_TOKEN)
     private readonly hotelsRepository: IHotelRepository,
+    private readonly mailerService: MailerService,
+    private readonly userervice: UserService,
   ) {}
   async create(id: number, data: CreateReservationDto) {
     const checkInDate = parseISO(data.checkIn)
@@ -46,6 +50,14 @@ export class CreateReservationsService {
       userId: id,
       status: ReservationStatus.PENDING,
     };
+
+    const hotelOwner = await this.userervice.show(hotel.ownerId)
+
+    await this.mailerService.sendMail({
+      to: hotelOwner.email,
+      subject: 'Pending Reservation Approval',
+      html: '<p>Você tem uma nova reserva pendente para aprovação.</p>'
+    })
 
     return this.reservatioRepository.create(newReservation)
   }
