@@ -11,7 +11,8 @@ export class OwnerHotelGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
-        const hotelId = request.params.id;
+        const hotelId = Number(request.params.id);
+        if (isNaN(hotelId)) return false;
 
         const user = request.user;
 

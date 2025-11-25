@@ -15,7 +15,7 @@ import { UserModule } from '../users/user.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid'
-import { uploadImageHotelService } from './services/uploadImageHotel.service';
+import { UploadImageHotelService } from './services/uploadImageHotel.service';
 
 @Module({
   imports: [
@@ -41,7 +41,7 @@ import { uploadImageHotelService } from './services/uploadImageHotel.service';
     UpdateHotelsService,
     FindByOwnerHotelsService,
     FindByNameHotelsService,
-    uploadImageHotelService,
+    UploadImageHotelService,
     {
       provide: HOTEL_REPOSITORY_TOKEN,
       useClass: HotelsRepositories,

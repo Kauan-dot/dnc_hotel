@@ -15,7 +15,7 @@ import { Role } from '@prisma/client';
 import { OwnerHotelGuard } from 'src/shared/guards/ownerHotel.guard';
 import { ParamId } from 'src/shared/decorators/paramId.decorator';
 import { User } from 'src/shared/decorators/user.decorator';
-import { uploadImageHotelService } from '../services/uploadImageHotel.service';
+import { UploadImageHotelService } from '../services/uploadImageHotel.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationInterceptor } from 'src/shared/interceptos/fileValidation.interceptor';
 import { ImageFileValidator } from 'src/shared/validators/image-file.validator';
@@ -31,7 +31,7 @@ export class HotelsController {
     private readonly updateHotelService: UpdateHotelsService,
     private readonly findByNameHotelService: FindByNameHotelsService,
     private readonly findByOwnerHotelService: FindByOwnerHotelsService,
-    private readonly uploadImageHotelService: uploadImageHotelService,
+    private readonly uploadImageHotelService: UploadImageHotelService,
   ) {}
 
   @Roles(Role.ADMIN)

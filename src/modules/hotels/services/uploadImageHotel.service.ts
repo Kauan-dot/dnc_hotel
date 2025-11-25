@@ -8,7 +8,7 @@ import Redis from 'ioredis';
 import { REDIS_HOTEL_KEY } from '../utils/redisKey';
 
 @Injectable()
-export class uploadImageHotelService {
+export class UploadImageHotelService {
   constructor(
     @Inject(HOTEL_REPOSITORY_TOKEN)
     private readonly hotelRepositories: IHotelRepository,
